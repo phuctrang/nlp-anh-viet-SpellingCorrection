@@ -1,0 +1,6 @@
+gingerit==0.8.2
+googletrans==3.0.0
+gtts==2.2.3
+streamlit==1.1.0
+textblob==0.17.1
+

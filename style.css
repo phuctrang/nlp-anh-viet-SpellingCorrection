@@ -1,0 +1,35 @@
+.highlight {
+  border-radius: 0.4rem;
+  color: white;
+  padding: 0.2rem;
+  margin-bottom: 0.7rem;
+}
+.bold {
+  padding-left: 1rem;
+  font-weight: 700;
+}
+.blue {
+  font-weight: bold;
+  color: #ff2b2b;
+  background-color: #ecf66e;
+  text-decoration: underline red wavy;
+}
+.green {
+  border: #f8cb14;
+  font-weight: bold;
+  color: #0aee50;
+  font-size: larger;
+}
+.green1 {
+  border: #f8cb14;
+  font-weight: bold;
+  color: #ecc606;
+}
+.hd {
+  text-decoration: overline;
+  font-size: x-large;
+  border: #f8cb14;
+  font-weight: bold;
+  color: #baf605;
+}
+
