@@ -1,3 +1,6 @@
+from cProfile import label
+from ntpath import join
+from operator import le
 import re
 import sys
 import unicodedata as ud
@@ -53,21 +56,74 @@ def so_Luong_Amtiet(text):
     tokens = re.findall(patterns, text, re.UNICODE)
     return [token[0] for token in tokens]
 # EN
+# def check_words(data_check):
+#     data_check.replace(".", "")
+#     data_check.replace("I", "")
+#     data = so_Luong_Amtiet(data_check)
+#     # data = data.remove('?')
+#     dem = 0
+#     for i in range(len(data)):
+#         if not is_spelled_correctly(data[i]):
+#             dem +=1
+#             str ="".join(data[i])
+#             a = "<span class='highlight blue'>"
+#             b = "</span>"
+#             str1 = a+str+b
+#             data[i] = str1
+#     return {"result": data, "false_number": dem}
+
+import spacy    
+nlp = spacy.load('en_core_web_sm')
+
+def NER(text):
+    x = nlp(text)
+    ten_rieng = []
+    label = []
+    for i in x.ents:
+        ten_rieng.append(i.text)
+        label.append(i.label_)
+    return {"ten_rieng": ten_rieng, "label": label}
+import numpy as np
 def check_words(data_check):
     data_check.replace(".", "")
     data_check.replace("I", "")
     data = so_Luong_Amtiet(data_check)
-    # data = data.remove('?')
+    data1 = " ".join(data)
+
+    x = NER(data1)['ten_rieng']
+    ner_arr = np.array(x)
+
+    y = NER(data1)['label']
+    label_arr = np.array(y)
+
     dem = 0
     for i in range(len(data)):
         if not is_spelled_correctly(data[i]):
             dem +=1
             str ="".join(data[i])
             a = "<span class='highlight blue'>"
+            # a1 = "<span class='highlight blue1'>"
             b = "</span>"
-            str1 = a+str+b
+            # for j in range(len(ner_arr)):
+            v = ner_arr
+            v = np.array(v)
+
+            v1 = label_arr
+            v1 = np.array(v1)
+            j = 0
+            exp = ''
+            for j in range(len(v)):
+                if str == v[j]:
+                    count = dem -1
+                    str1 = str + ' {' + v1[j] + '}'
+                    exp = v1[j] + ' (explain: ' + spacy.explain(v1[j]) + ')'
+                else:
+                    str1 = a+str+b
+                    exp = ' Null'
             data[i] = str1
-    return {"result": data, "false_number": dem}
+         
+    return {"result": data, "false_number": count, "explain": exp}
+# streamlit run C:\Users\HOPHUCTRANG\PycharmProjects\pythonProject\finalNLP.py
 # VI
 def check_words_vi(data_check):
     data = so_Luong_Amtiet(data_check)
@@ -89,7 +145,14 @@ def correct_words(data_input):
     text = TextBlob(data_input1)
     kq = text.correct()
     return kq
-
+#VI
+from spellingvietnam.tool.predictor import Predictor
+model_predictor = Predictor(device='cpu', model_type='seq2seq', weight_path='C:/Users/HOPHUCTRANG/anaconda3/Lib/site-packages/spellingvietnam/weights/seq2seq_0.pth')
+def correct_words_vi(data_input):
+    data_input = so_Luong_Amtiet(data_input)
+    data_input1 = " ".join(data_input)
+    kq = model_predictor.predict(data_input1.strip(), NGRAM=6)
+    return kq
 #EN
 def Check_grammar(data_input):
     dem = 0
@@ -142,8 +205,8 @@ if choice == "1. Introduction":
         st.image("https://static.streamlit.io/examples/dog.jpg")
     with col3:
         st.markdown(new_title2, unsafe_allow_html=True)
-        st.image("https://scontent.fdad3-4.fna.fbcdn.net/v/t1.6435-9/58068344_576680626075948_468038172681437184_n.jpg?_nc_cat=101&ccb=1-5&_nc_sid=174925&_nc_ohc=zqEl80ipoDAAX8dz9Ze&tn=txMtl062vm3NfXl6&_nc_ht=scontent.fdad3-4.fna&oh=2c3a31c1ddfeefc4c2ee7b05c5f1380a&oe=61C7042E", width=250)
-        st.markdown("Hồ Phúc Trang from ITK41C   Computer science")
+        st.image("https://scontent.fdad3-3.fna.fbcdn.net/v/t1.6435-9/117968481_900690080341666_3756382769373793163_n.jpg?_nc_cat=100&ccb=1-5&_nc_sid=174925&_nc_ohc=3p4EaWDojIYAX8VfujO&_nc_ht=scontent.fdad3-3.fna&oh=00_AT__2F7AmzB8i_cLMLUmrHLsry632xaxnIzYtP6Khl4qlQ&oe=62084F26", width=210)
+        st.markdown("Ho Phuc Trang from ITK41C   Computer science")
 if choice == "2. Check spelling Words":
     c = h1 + 'Check spelling Words'+ h2
     st.markdown(c, unsafe_allow_html=True)
@@ -165,12 +228,15 @@ if choice == "2. Check spelling Words":
             if st.button("CHECK", key=2):
                 st.markdown(data)
                 check = " ".join(check_words(data)["result"])
+                # check = check_words(data)["result"]
                 fal = check_words(data)["false_number"]
+                Named_Entity_Recognition = check_words(data)["explain"]
                 c = "RESULT CHECKING: "
                 c = x+c+y
                 st.markdown(c, unsafe_allow_html=True)
                 st.markdown(check, unsafe_allow_html=True)
                 st.markdown(x1 + "Detected error is: " + y1 + x+ str(fal)+y, unsafe_allow_html=True)
+                st.markdown(x1 + "Detected Named Entity is: " + y1 + x+ str(Named_Entity_Recognition)+y, unsafe_allow_html=True)
                 # st.text_area("\nRESULT CHECKING: ", value=check, height=None, max_chars=None, key=2)
                 # st.download_button(label='Download text', data=check, file_name='output_check_words.txt')
 
@@ -184,11 +250,13 @@ if choice == "2. Check spelling Words":
                 st.markdown(data)
                 check = " ".join(check_words(data)["result"])
                 fal = check_words(data)["false_number"]
+                Named_Entity_Recognition = check_words(data)["explain"]
                 c = "RESULT CHECKING: "
                 c = x+c+y
                 st.markdown(c, unsafe_allow_html=True)
                 st.markdown(check, unsafe_allow_html=True)
                 st.markdown(x1 + "Detected error is: " + y1 + x+ str(fal)+y, unsafe_allow_html=True)
+                st.markdown(x1 + "Detected Named Entity is: " + y1 + x+ str(Named_Entity_Recognition)+y, unsafe_allow_html=True)
                 # st.text_area("\nRESULT CHECKING: ", value=check, height=None, max_chars=None, key=2)
                 # st.download_button(label='Download text', data=check, file_name='output_check_words.txt')
     elif input_type == "Vietnamses":
@@ -267,7 +335,37 @@ if choice == "3. Correct spelling words":
                 st.markdown(new_title, unsafe_allow_html=True)
                 st.download_button(label='Download text', data=check, file_name='output_correct.txt')
     elif input_type == "Vietnamses":
-    	st.markdown("Updating ... hmmm! ")
+        input_type2 = st.selectbox(
+            "Chọn hình thức đầu vào của bạn !",
+            ("Nhập trực tiếp", "Chọn tệp"),
+        )
+        if input_type2 == "Nhập trực tiếp":
+            Enter_text = st.text_input("Nhập chuỗi tại đây:")
+            data = Enter_text
+            if st.button("Xem lại chuỗi đã nhập", key=1, on_click=None):
+                st.text_area("Nội dung: ", value=data, height=None, max_chars=None, key=1)
+            if st.button("BẮT ĐẦU SỬA", key=2):
+                st.markdown(data)
+                check = "".join(correct_words_vi(data))
+
+                # tick('&#10004;')
+                st.text_area("\nKết quả là: ", value=check, height=None, max_chars=None, key=2)
+                new_title = '<p style="font-family:sans-serif; color:Green; font-size: 42px;">&#10004;</p>'
+                st.markdown(new_title, unsafe_allow_html=True)
+                st.download_button(label='Tải xuống đoạn văn bản này', data=check, file_name='output_correct.txt')
+        elif input_type2 == "Chọn tệp":
+            txt_file = st.file_uploader("Chọn một tệp từ thiết bị của bạn: ", type=["txt"])
+            if st.button("Xem tệp:", key=1, on_click=None):
+                data = txt_file.read().decode()
+                st.text_area("Nội dung của " + txt_file.name, value=data, height=None, max_chars=None, key=1)
+            if st.button("BẮT ĐẦU SỬA", key=2):
+                data = txt_file.read().decode()
+                st.markdown(data)
+                check = "".join(correct_words_vi(data))
+                st.text_area("\nKết quả là: ", value=check, height=None, max_chars=None, key=2)
+                new_title = '<p style="font-family:sans-serif; color:Green; font-size: 42px;">&#10004;</p>'
+                st.markdown(new_title, unsafe_allow_html=True)
+                st.download_button(label='Tải xuống đoạn văn bản này', data=check, file_name='output_correct.txt')
 if choice == "4. Check spelling grammar":
     c = h1 + 'Check spelling grammar' + h2
     st.markdown(c, unsafe_allow_html=True)
